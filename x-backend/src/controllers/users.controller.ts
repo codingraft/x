@@ -85,6 +85,7 @@ export const suggestedProfile = async (
     const suggestedUsers = filteredUsers.slice(0, 4);
 
     suggestedUsers.forEach((user) => (user.password = null));
+    
 
     res.status(200).json(suggestedUsers);
   } catch (error) {

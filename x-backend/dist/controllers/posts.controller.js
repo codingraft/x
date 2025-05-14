@@ -101,10 +101,8 @@ export const commentOnPost = async (req, res) => {
         };
         post.comments.push(comment);
         await post.save();
-        res.status(201).json({
-            success: true,
-            data: post,
-        });
+        const updatedComments = post.comments;
+        res.status(201).json(updatedComments);
     }
     catch (error) {
         console.log("Comment on post error:", error);
@@ -128,10 +126,8 @@ export const likeUnlikePost = async (req, res) => {
         if (post.likes.includes(userId)) {
             await Post.updateOne({ _id: id }, { $pull: { likes: userId } });
             await User.updateOne({ _id: userId }, { $pull: { likedPosts: id } });
-            return res.status(200).json({
-                success: true,
-                message: "Post unliked successfully",
-            });
+            const updatedLikes = post.likes.filter((like) => like.toString() !== userId.toString());
+            return res.status(200).json(updatedLikes);
         }
         else {
             post.likes.push(userId);
@@ -143,10 +139,8 @@ export const likeUnlikePost = async (req, res) => {
                 type: "like",
             });
             await notification.save();
-            return res.status(200).json({
-                success: true,
-                message: "Post liked successfully",
-            });
+            const updatedLikes = post.likes;
+            return res.status(200).json(updatedLikes);
         }
     }
     catch (error) {

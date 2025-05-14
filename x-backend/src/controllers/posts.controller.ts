@@ -108,10 +108,8 @@ export const commentOnPost = async (req: any, res: Response) => {
     post.comments.push(comment);
     await post.save();
 
-    res.status(201).json({
-      success: true,
-      data: post,
-    });
+    const updatedComments = post.comments;
+    res.status(201).json(updatedComments);
   } catch (error) {
     console.log("Comment on post error:", error);
     res.status(500).json({
@@ -120,7 +118,7 @@ export const commentOnPost = async (req: any, res: Response) => {
     });
   }
 };
-
+ 
 export const likeUnlikePost = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
@@ -135,10 +133,10 @@ export const likeUnlikePost = async (req: any, res: Response) => {
     if (post.likes.includes(userId)) {
       await Post.updateOne({ _id: id }, { $pull: { likes: userId } });
       await User.updateOne({ _id: userId }, { $pull: { likedPosts: id } });
-      return res.status(200).json({
-        success: true,
-        message: "Post unliked successfully",
-      });
+      const updatedLikes = post.likes.filter(
+        (like) => like.toString() !== userId.toString()
+      )
+      return res.status(200).json(updatedLikes);
     } else {
       post.likes.push(userId);
       await User.updateOne({ _id: userId }, { $push: { likedPosts: id } });
@@ -152,10 +150,8 @@ export const likeUnlikePost = async (req: any, res: Response) => {
 
       await notification.save();
 
-      return res.status(200).json({
-        success: true,
-        message: "Post liked successfully",
-      });
+      const updatedLikes = post.likes;
+      return res.status(200).json(updatedLikes);
     }
   } catch (error) {
     console.log("Like/Unlike post error:", error);

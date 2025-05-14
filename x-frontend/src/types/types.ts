@@ -44,3 +44,10 @@ export interface AuthUser {
     likes: string[];
     comments: Comment[];
   }
+
+  export interface SuggestedUser {
+    _id: string;
+    username: string;
+    profilePicture: string;
+    fullName: string;
+  }
