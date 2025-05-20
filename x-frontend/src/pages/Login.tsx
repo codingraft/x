@@ -22,7 +22,7 @@ const LoginPage = () => {
   const { mutate, isError, isPending, error } = useMutation({
     mutationFn: async ({ username, password }: LoginUserData) => {
       try {
-        await axios.post(`api/v1/auth/login`, {
+        await axios.post(`/api/v1/auth/login`, {
           username,
           password,
         });

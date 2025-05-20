@@ -1,5 +1,5 @@
-import { ChangeEvent, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 // import EditProfileModal from "./EditProfileModal";
 
@@ -11,29 +11,65 @@ import { POSTS } from "../utils/db/dummy";
 import Posts from "./Posts";
 import ProfileHeaderSkeleton from "../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "../components/EditProfileModal";
+import { useQuery } from "@tanstack/react-query";
+import { FormDataEditProfile, User } from "../types/types";
+import axios from "axios";
+import { formatMemberSinceDate } from "../utils/date/function";
+import { useFollow } from "../hooks/useFollow";
+
+import useUpdateUserProfile from "../hooks/useUpdateUserProfile";
 
 const ProfilePage = () => {
-  const [coverImg, setCoverImg] = useState<string | null>(null);
-  const [profileImg, setProfileImg] = useState<string | null>(null);
+  const [coverPicture, setCoverPicture] = useState<string | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+    const [formData] = useState<FormDataEditProfile>({
+      fullName: "",
+      username: "",
+      email: "",
+      bio: "",
+      link: "",
+      newPassword: "",
+      currentPassword: "",
+    });
+  
   const [feedType, setFeedType] = useState("posts");
 
   const coverImgRef = useRef<HTMLInputElement | null>(null);
   const profileImgRef = useRef<HTMLInputElement | null>(null);
+  const { username } = useParams();
 
-  const isLoading = false;
-  const isMyProfile = true;
+  const { data: authUser } = useQuery<User>({
+    queryKey: ["authUser"],
+  });
 
-  const user = {
-    _id: "1",
-    fullName: "John Doe",
-    username: "johndoe",
-    profileImg: "/avatars/boy2.png",
-    coverImg: "/cover.png",
-    bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    link: "https://youtube.com/@asaprogrammer_",
-    following: ["1", "2", "3"],
-    followers: ["1", "2", "3"],
-  };
+  const {
+    data: user,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery<User>({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      try {
+        const user = await axios.get(`/api/v1/users/profile/${username}`);
+        return user.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const errorMessage = error.response?.data.message;
+          console.error("Error during logout:", error);
+          throw new Error(errorMessage);
+        }
+        throw error;
+      }
+    },
+  });
+
+  const { updateProfile, isUpdating } = useUpdateUserProfile();
+  const { follow, isPending } = useFollow();
+
+  const isMyProfile = authUser?._id === user?._id;
+  const memberSince = formatMemberSinceDate(user?.createdAt ?? "");
+  const amIFollowing = authUser?.following.includes(user?._id ?? "") ?? false;
 
   const handleImgChange = (e: ChangeEvent<HTMLInputElement>, state: string) => {
     const file: File | undefined = e.target.files?.[0];
@@ -41,26 +77,72 @@ const ProfilePage = () => {
       const reader = new FileReader();
       reader.onload = () => {
         if (state === "coverImg" && typeof reader.result === "string") {
-          setCoverImg(reader.result);
+          setCoverPicture(reader.result);
         }
         if (state === "profileImg" && typeof reader.result === "string") {
-          setProfileImg(reader.result);
+          setProfilePicture(reader.result);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
+const userFields: (keyof Pick<
+  User,
+  "fullName" | "username" | "email" | "bio" | "link" 
+>)[] = ["fullName", "username", "email", "bio", "link"];
+
+// Step 1: Build only changed user fields
+const updatedTextFields = userFields.reduce((acc, key) => {
+  if (formData[key] !== authUser?.[key]) {
+    acc[key] = formData[key];
+  }
+  return acc;
+}, {} as Partial<Pick<User, "fullName" | "username" | "email" | "bio" | "link">>);
+
+// Step 2: Add changed picture fields
+const updatedPictureFields: Partial<Pick<User, "coverPicture" | "profilePicture">> = {};
+
+if (coverPicture !== authUser?.coverPicture && coverPicture !== null) {
+  updatedPictureFields.coverPicture = coverPicture;
+}
+
+if (profilePicture !== authUser?.profilePicture && profilePicture !== null) {
+  updatedPictureFields.profilePicture = profilePicture;
+}
+
+// Step 3: Merge everything
+const updateProfileFn = () => {
+  if (!authUser) return;
+
+  const finalUpdatePayload = {
+    ...updatedTextFields,
+    ...updatedPictureFields,
+  };
+
+  // Don't send empty object
+  if (Object.keys(finalUpdatePayload).length === 0) {;
+    return;
+  }
+
+  updateProfile(finalUpdatePayload);
+};
+
+  useEffect(() => {
+    refetch();
+  }, [username, refetch]);
+
+
   return (
     <>
       <div className="flex-[4_4_0]  border-r border-gray-700 min-h-screen ">
         {/* HEADER */}
-        {isLoading && <ProfileHeaderSkeleton />}
-        {!isLoading && !user && (
+        {(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
+        {!(isLoading && isRefetching) && !user && (
           <p className="text-center text-lg mt-4">User not found</p>
         )}
         <div className="flex flex-col">
-          {!isLoading && user && (
+          {!isLoading && !isRefetching && user && (
             <>
               <div className="flex gap-10 px-4 py-2 items-center">
                 <Link to="/">
@@ -76,7 +158,7 @@ const ProfilePage = () => {
               {/* COVER IMG */}
               <div className="relative group/cover">
                 <img
-                  src={coverImg || user?.coverImg || "/cover.png"}
+                  src={coverPicture || user?.coverPicture || "/cover.png"}
                   className="h-52 w-full object-cover"
                   alt="cover image"
                 />
@@ -108,8 +190,8 @@ const ProfilePage = () => {
                   <div className="w-32 rounded-full relative group/avatar">
                     <img
                       src={
-                        profileImg ||
-                        user?.profileImg ||
+                        profilePicture ||
+                        user?.profilePicture ||
                         "/avatar-placeholder.png"
                       }
                     />
@@ -125,21 +207,25 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
+                {isMyProfile && (
+                  <EditProfileModal authUser={authUser || null} />
+                )}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user?._id)}
                   >
-                    Follow
+                    {isPending && "Following..."}
+                    {!isPending && amIFollowing && "Unfollow"}
+                    {!isPending && !amIFollowing && "Follow"}
                   </button>
                 )}
-                {(coverImg || profileImg) && (
+                {(coverPicture || profilePicture) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={updateProfileFn}
                   >
-                    Update
+                    {isUpdating ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>
@@ -172,7 +258,7 @@ const ProfilePage = () => {
                   <div className="flex gap-2 items-center">
                     <IoCalendarOutline className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-500">
-                      Joined July 2021
+                      {memberSince}
                     </span>
                   </div>
                 </div>
@@ -214,7 +300,11 @@ const ProfilePage = () => {
             </>
           )}
 
-          <Posts />
+          <Posts
+            username={username ?? ""}
+            feedType={feedType}
+            userId={user?._id ?? ""}
+          />
         </div>
       </div>
     </>

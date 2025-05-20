@@ -281,7 +281,10 @@ export const getUserPosts = async (req: any, res: Response) => {
 				select: "-password",
 			});
 
-		res.status(200).json(posts);
+		res.status(200).json({
+      success: true,
+      data: posts,
+    });
 	} catch (error) {
 		console.log("Error in getUserPosts controller: ", error);
 		res.status(500).json({ error: "Internal server error" });

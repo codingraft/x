@@ -27,7 +27,7 @@ const SignUpPage = () => {
       password,
     }: SignupUserData) => {
       try {
-        await axios.post(`api/v1/auth/signup`, {
+        await axios.post(`/api/v1/auth/signup`, {
           email,
           username,
           fullName,

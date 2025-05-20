@@ -4,32 +4,52 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { Notification } from "../types/types";
+
 
 const NotificationPage = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: "1",
-      from: {
-        _id: "1",
-        username: "johndoe",
-        profileImg: "/avatars/boy2.png",
-      },
-      type: "follow",
+  const queryClient = useQueryClient();
+  const {data: notifications, isLoading} = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      try {
+        const notifications = await axios.get("/api/v1/notifications");
+        return notifications.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          // const errorMessage = error.response?.data.message;
+          console.error("Error during logout:", error);
+        }
+      }
     },
-    {
-      _id: "2",
-      from: {
-        _id: "2",
-        username: "janedoe",
-        profileImg: "/avatars/girl1.png",
-      },
-      type: "like",
+  });
+
+  const {mutate: deleteNotification} = useMutation({
+    mutationFn: async () => {
+      try {
+        await axios.delete("/api/v1/notifications");
+        toast.success("Notification deleted successfully");
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          // const errorMessage = error.response?.data.message;
+          console.error("Error during logout:", error);
+          toast.error("Something went wrong");
+        }
+        else {
+          console.error("Unexpected error:", error);
+        }
+      }
     },
-  ];
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
 
   const deleteNotifications = () => {
-    alert("All notifications deleted");
+    deleteNotification();
   };
 
   return (
@@ -59,7 +79,7 @@ const NotificationPage = () => {
         {notifications?.length === 0 && (
           <div className="text-center p-4 font-bold">No notifications 🤔</div>
         )}
-        {notifications?.map((notification) => (
+        {notifications?.map((notification : Notification) => (
           <div className="border-b border-gray-700" key={notification._id}>
             <div className="flex gap-2 p-4">
               {notification.type === "follow" && (

@@ -1,9 +1,36 @@
 export type User = {
   _id: string;
   username: string;
-  profileImg: string;
+  email: string;
+  profilePicture: string;
   fullName: string;
+  coverPicture: string;
+  bio?: string;
+  link?: string;
+  followers: string[];
+  following: string[];
+  likedPosts: string[];
+    currentPassword?: string;
+  newPassword?: string;
+  createdAt: string;
+};
+
+export interface FormDataEditProfile {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  bio?: string;
+  link?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  coverPicture?: string | File | null;
+  profilePicture?: string | File | null;
+  updatedPictureFields?: {
+    coverPicture?: string | File | null;
+    profilePicture?: string | File | null;
+  };
 }
+
 type Comment = {
   _id?: string;
   user?: User;
@@ -15,8 +42,9 @@ export interface Posts {
   user: User;
   text: string;
   image?: string;
-  likes: string[];
-  comments: Comment[];
+  likes?: string[];
+  comments?: Comment[];
+  createdAt?: string;
 }
 
 export interface SignupUserData {
@@ -31,23 +59,32 @@ export interface LoginUserData {
 }
 
 export interface AuthUser {
+  username: string;
+  fullName: string;
+  profileImg?: string;
+}
+
+export interface PostType {
+  _id: string;
+  user: User;
+  text: string;
+  img?: string;
+  likes: string[];
+  comments: Comment[];
+}
+
+export interface SuggestedUser {
+  _id: string;
+  username: string;
+  profilePicture: string;
+  fullName: string;
+}
+
+export type Notification = {
+  _id: string;
+  type: "follow" | "like";
+  from: {
     username: string;
-    fullName: string;
     profileImg?: string;
-  }
-
-  export interface PostType {
-    _id: string;
-    user: User;
-    text: string;
-    img?: string;
-    likes: string[];
-    comments: Comment[];
-  }
-
-  export interface SuggestedUser {
-    _id: string;
-    username: string;
-    profilePicture: string;
-    fullName: string;
-  }
+  };
+};

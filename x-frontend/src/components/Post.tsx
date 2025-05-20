@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../utils/date/function";
 
 const Post = ({ post }: { post: Posts }) => {
   const [comment, setComment] = useState("");
@@ -22,7 +23,7 @@ const Post = ({ post }: { post: Posts }) => {
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
-        await axios.delete(`api/v1/posts/${post._id}`);
+        await axios.delete(`/api/v1/posts/${post._id}`);
         toast.success("Post deleted successfully");
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -42,7 +43,7 @@ const Post = ({ post }: { post: Posts }) => {
   const { mutate: likePost, isPending: isLiking } = useMutation({
     mutationFn: async () => {
       try {
-        const response = await axios.post(`api/v1/posts/like/${post._id}`);
+        const response = await axios.post(`/api/v1/posts/like/${post._id}`);
         // console.log("response", response);
         return response.data;
       } catch (error) {
@@ -60,6 +61,7 @@ const Post = ({ post }: { post: Posts }) => {
       queryClient.setQueryData(["posts"], (oldPosts: Posts[]) => {
         return oldPosts.map((p) => {
           if (p._id === post._id) {
+            //  queryClient.invalidateQueries({ queryKey: ["posts"] });
             return {
               ...p,
               likes: updatedLikes,
@@ -74,7 +76,7 @@ const Post = ({ post }: { post: Posts }) => {
   const { mutate: commentPost, isPending: isCommentingPost } = useMutation({
     mutationFn: async () => {
       try {
-        const response = await axios.post(`api/v1/posts/comment/${post._id}`, {
+        const response = await axios.post(`/api/v1/posts/comment/${post._id}`, {
           text: comment,
         });
         console.log("response", response);
@@ -112,7 +114,7 @@ const Post = ({ post }: { post: Posts }) => {
 
   const isMyPost = authUser?._id === post.user._id;
 
-  const formattedDate = "1h";
+  const formattedDate = formatPostDate(post.createdAt || "");
 
   const isCommenting = false;
 
@@ -139,7 +141,7 @@ const Post = ({ post }: { post: Posts }) => {
             to={`/profile/${postOwner.username}`}
             className="w-8 rounded-full overflow-hidden"
           >
-            <img src={postOwner.profileImg || "/avatar-placeholder.png"} />
+            <img src={postOwner.profilePicture || "/avatar-placeholder.png"} />
           </Link>
         </div>
         <div className="flex flex-col flex-1">
@@ -188,7 +190,7 @@ const Post = ({ post }: { post: Posts }) => {
               >
                 <FaRegComment className="w-4 h-4  text-slate-500 group-hover:text-sky-400" />
                 <span className="text-sm text-slate-500 group-hover:text-sky-400">
-                  {post.comments.length}
+                  {(post.comments?.length ?? 0)}
                 </span>
               </div>
               {/* We're using Modal Component from DaisyUI */}
@@ -199,18 +201,18 @@ const Post = ({ post }: { post: Posts }) => {
                 <div className="modal-box rounded border border-gray-600">
                   <h3 className="font-bold text-lg mb-4">COMMENTS</h3>
                   <div className="flex flex-col gap-3 max-h-60 overflow-auto">
-                    {post.comments.length === 0 && (
+                    {(post.comments?.length ?? 0) === 0 && (
                       <p className="text-sm text-slate-500">
                         No comments yet 🤔 Be the first one 😉
                       </p>
                     )}
-                    {post.comments.map((comment) => (
+                    {(post.comments ?? []).map((comment) => (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
                           <div className="w-8 rounded-full">
                             <img
                               src={
-                                comment.user?.profileImg ||
+                                comment.user?.profilePicture ||
                                 "/avatar-placeholder.png"
                               }
                             />
@@ -276,7 +278,7 @@ const Post = ({ post }: { post: Posts }) => {
                     isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
-                  {post.likes.length || 0}
+                  {post.likes?.length ?? 0}
                 </span>
               </div>
             </div>

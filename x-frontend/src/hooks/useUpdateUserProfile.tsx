@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
+import {  FormDataEditProfile } from "../types/types";
 
-export const useFollow = () => {
+const useUpdateUserProfile = () => {
   const queryClient = useQueryClient();
-
-  const { mutate: follow, isPending } = useMutation({
-    mutationFn: async (userId: string) => {
+  const { mutate: updateProfile, isPending: isUpdating } = useMutation({
+    mutationFn: async (formData: FormDataEditProfile) => {
       try {
-        await axios.post(`/api/v1/users/follow/${userId}`);
-        toast.success("Follow successful");
+        await axios.post(`/api/v1/users/update`, formData);
+        toast.success("Profile updated successfully");
       } catch (error) {
         if (axios.isAxiosError(error)) {
           const errorMessage = error.response?.data.message;
@@ -23,9 +23,15 @@ export const useFollow = () => {
     onSuccess: () => {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ["authUser"] }),
-        queryClient.invalidateQueries({ queryKey: ["suggestedUsers"] }),
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
       ]);
     },
   });
-  return { follow, isPending };
+
+  return {
+    updateProfile,
+    isUpdating,
+  };
 };
+
+export default useUpdateUserProfile;

@@ -16,7 +16,7 @@ const Sidebar = () => {
   const { mutate: logout, isPending } = useMutation({
     mutationFn: async () => {
       try {
-        await axios.post(`api/v1/auth/logout`);
+        await axios.post(`/api/v1/auth/logout`);
         toast.success("Logout successful");
       } catch (error) {
         if (axios.isAxiosError(error)) {

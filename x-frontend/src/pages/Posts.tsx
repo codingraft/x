@@ -5,14 +5,27 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { PostType } from "../types/types";
 import { useEffect } from "react";
+// import { useParams } from "react-router-dom";
 
-const Posts = ({ feedType }: { feedType: string }) => {
+const Posts = ({
+  feedType,
+  username,
+  userId,
+}: {
+  feedType: string;
+  username: string;
+  userId: string;
+}) => {
   const getPostEndpoint = () => {
     switch (feedType) {
       case "forYou":
         return "/api/v1/posts/all";
       case "following":
         return "/api/v1/posts/following";
+      case "posts":
+        return `/api/v1/posts/user/${username}`;
+      case "likes":
+        return `/api/v1/posts/likes/${userId}`;
       default:
         return "/api/v1/posts/all";
     }
@@ -47,7 +60,7 @@ const Posts = ({ feedType }: { feedType: string }) => {
 
   useEffect(() => {
     refetch();
-  }, [feedType, refetch]);
+  }, [feedType, username, refetch]);
 
   return (
     <>
@@ -58,10 +71,10 @@ const Posts = ({ feedType }: { feedType: string }) => {
           <PostSkeleton />
         </div>
       )}
-      {!(isLoading || isRefetching)  && posts?.length === 0 && (
+      {!(isLoading || isRefetching) && posts?.length === 0 && (
         <p className="text-center my-4">No posts in this tab. Switch 👻</p>
       )}
-      {!(isLoading || isRefetching)  && posts && (
+      {!(isLoading || isRefetching) && posts && (
         <div>
           {posts.map((post) => (
             <Post key={post._id} post={post} />

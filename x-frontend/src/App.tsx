@@ -14,7 +14,7 @@ const Home = lazy(() => import("./pages/Home"));
 
 function App() {
   const { data: authUser, isLoading } = useQuery<User>({
-    queryKey: ["authUser"],
+    queryKey: ["authUser"], 
   });
 
   if (isLoading) {
