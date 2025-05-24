@@ -34,6 +34,7 @@ export const signUp = async (req, res) => {
             fullName,
             username,
         });
+        // console.log("New User: ", newUser);
         if (newUser) {
             generateToken(newUser._id, res);
             await newUser.save();
@@ -72,8 +73,10 @@ export const login = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ message: "Invalid password" });
         }
+        // console.log(" User: ", user);
         //send token
-        generateToken(user._id, res);
+        const token = generateToken(user._id, res);
+        // console.log("Token: ", token);
         res.status(200).json({ message: "Login successful" });
     }
     catch (error) {
@@ -84,8 +87,10 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
     try {
         // Clear the JWT cookie
-        res.cookie("jwt", "", {
-            maxAge: 0, // Set maxAge to 0 to delete the cookie
+        res.clearCookie("jwt", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
         });
         res.status(200).json({ message: "Logout successful" });
     }

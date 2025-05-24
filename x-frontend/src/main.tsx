@@ -9,14 +9,16 @@ import toast from "react-hot-toast";
 
 const defaultQueryFn = async () => {
   try {
-    const user = await axios.get("/api/v1/auth/me");
-    console.log(user.data);
+    const user = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/auth/me`,{
+      withCredentials: true,
+    });
+    // console.log(user);
     return user.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const errorMessage = error.response?.data.message;
-      console.error("Error during logout:", error);
-      toast.error(errorMessage || "Something went wrong");
+      // const errorMessage = error.response?.data.message;
+      console.error("Error during fetching user:", error);
+      toast.error("Login required");
       return null;
     } else {
       console.error("Unexpected error:", error);

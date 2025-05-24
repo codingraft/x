@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import { ProtectedRouteRequest } from "../types/types.js";
 
 export const protectedRoute = async (
@@ -9,6 +9,7 @@ export const protectedRoute = async (
   next: NextFunction
 ) => {
   try {
+    // console.log("req.cookies: ", req);
     const token = req.cookies?.jwt;
     // console.log("Token: ", token);
     if (!token) {

@@ -6,7 +6,7 @@ import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import XSvg from "../components/svg/X";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { SignupUserData } from "../types/types";
 import axios from "axios";
@@ -19,7 +19,14 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { mutate: login, isError, isPending, error } = useMutation({
+  	const queryClient = useQueryClient();
+
+  const {
+    mutate: login,
+    isError,
+    isPending,
+    error,
+  } = useMutation({
     mutationFn: async ({
       email,
       username,
@@ -27,12 +34,19 @@ const SignUpPage = () => {
       password,
     }: SignupUserData) => {
       try {
-        await axios.post(`/api/v1/auth/signup`, {
-          email,
-          username,
-          fullName,
-          password,
-        });
+       await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/signup`,
+          {
+            email,
+            username,
+            fullName,
+            password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+        // console.log("Signup response:", res);
         toast.success("Signup successful");
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -43,6 +57,9 @@ const SignUpPage = () => {
           console.error("Unexpected error:", error);
         }
       }
+    },
+     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 

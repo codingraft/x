@@ -4,7 +4,7 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "main": "index.js",
+  "main": "./dist/app.js",
   "type": "module",
   "scripts": {
     "start": "node dist/app.js",
@@ -25,11 +25,11 @@
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.9",
-    "@types/node": "^22.13.14",
+    "@types/node": "^22.15.21",
     "typescript": "^5.8.2"
   }
 }
